@@ -1,206 +1,239 @@
+# 🚀 Amazon Listing Optimizer
 
+A full-stack AI-powered application that takes an Amazon ASIN, scrapes the product page, and generates optimized listing content using **Gemini 2.5 Flash**.
+The UI displays **original vs. optimized** content side-by-side and stores every optimization for historical review.
 
-<!-- Badges -->
-<p align="center">
-	<img src="https://img.shields.io/badge/Node.js-18%2B-green" alt="Node.js" />
-	<img src="https://img.shields.io/badge/React-18-blue" alt="React" />
-	<img src="https://img.shields.io/badge/MySQL-8-orange" alt="MySQL" />
-	<img src="https://img.shields.io/badge/Gemini-2.5_Flash-purple" alt="Gemini" />
-</p>
-
-
-# Amazon Listing Optimizer
-
-A full-stack application that takes an Amazon ASIN, fetches the product details directly from the product page, and generates optimized listing content using Google Gemini. The app displays original and optimized content side-by-side and keeps a history of every optimization.
-
-This README explains what the project does, how it is structured, and how to run it locally.
+This project simulates real internal tools used by Amazon sellers, agencies, and e-commerce automation teams.
 
 ---
 
-## Screenshots
+# ✨ Features
 
-<p align="center">
-	<img src="frontend/SS/HOME1.png" alt="Home Input" width="350" />
-	<img src="frontend/SS/HOME2.png" alt="CompareView" width="350" />
-	<img src="frontend/SS/HISTORY.png" alt="History Page" width="350" />
-</p>
+### 🔍 Amazon Scraper
 
----
+* Fetches **title**, **bullet points**, **description**, and **main product image** directly from the Amazon product page.
+* Includes fallback selectors for Amazon layout changes.
+* HTML aggressively cached for speed.
 
+### 🤖 AI Optimization (Gemini 2.5 Flash)
 
+Generates:
 
-## Features
+* Improved, keyword-rich product title
+* Clearer, rewritten bullet points
+* Persuasive and policy-safe product description
+* 3–6 keyword suggestions
+* Ultra-low latency via parallelized scraping + AI execution
 
-- Fetches Amazon product data using a custom scraper (title, bullet points, description, image).
-- Uses Gemini 2.5 Flash to generate improved titles, bullets, descriptions, and keyword suggestions.
-- Stores every optimization in a MySQL database.
-- Clean React frontend for entering ASINs, comparing results, and viewing history.
-- Modern, minimal UI.
-- **Ultra-low latency:** Parallelized scraping and AI generation, aggressive HTML caching, background DB writes, strict Gemini response schema, and professional skeleton loaders for instant feedback.
+### 🗄 Persistent History System
 
----
+* Each optimization run is stored with timestamps.
+* History page shows all items and lets you load any past optimization.
+* Uses a **dual-mode data layer**:
 
-## Database & Fallback System
+  * **MySQL (primary)**
+  * **Automatic JSON fallback** (`backend/src/db/db.json`)
 
-- **Primary Database:** MySQL is used by default, with Sequelize automatically creating the `optimizations` table on startup when valid credentials are present.
-- **Full History:** Every listing’s original and optimized data is stored with timestamps, enabling complete history and side-by-side comparisons for each ASIN.
-- **Instant Fallback:** If MySQL isn’t configured, the backend switches to a local JSON file (`backend/src/db/db.json`) with the same structure—no setup required.
-- **Unified API Shape:** Both database modes share the same API and data format, keeping the frontend consistent and allowing the app to run instantly on any machine.
+### 💻 Modern Frontend (React + Vite)
 
-
-
----
-
-## Tech Stack
-
-### Backend
-- Node.js + Express
-- Sequelize (MySQL)
-- Axios + Cheerio for scraping
-- Custom Gemini API client
-
-### Frontend
-- React + Vite
+* Tailwind-styled UI
+* Skeleton loaders
+* LocalStorage result persistence
+* Beautiful comparison layout
+* Two-page navigation: **Home** + **History**
 
 ---
 
+# 🏗 Tech Stack
 
-## Architecture Overview
+### **Frontend**
 
-The system follows a simple client-server flow:
-1. User enters an ASIN in the frontend.
-2. Frontend calls the backend /api/optimize endpoint.
-3. Backend scrapes Amazon for title, bullets, description, and image.
-4. Gemini generates optimized content.
-5. Backend stores all data and returns it to the UI.
-6. UI shows a comparison and stores the state for reload.
-7. /api/history provides all past optimizations.
+* React + Vite
+* Tailwind CSS
+* Modern card-based UI components
+
+### **Backend**
+
+* Node.js + Express
+* Gemini API client
+* Axios + Cheerio scraping engine
+* Sequelize ORM
+* MySQL / JSON fallback datastore
 
 ---
 
-## System Diagram
+# 🔧 Architecture Overview
 
-```mermaid
-flowchart LR
-	A[User/Browser] -->|ASIN| B(Frontend React UI)
-	B -->|API call| C(Backend Express API)
-	C -->|Scrape| D[Amazon Product Page]
-	C -->|AI Request| E[Gemini API]
-	C -->|DB Write/Read| F[(MySQL/JSON DB)]
-	C -->|Response| B
-	B -->|Show Results| A
+### Workflow
+
+1. User enters ASIN (e.g., `B0FWDBH2T2`).
+2. Frontend sends request → `POST /api/optimize`.
+3. Backend:
+
+   * Scrapes Amazon (title, bullets, description, image).
+   * Runs Gemini optimization in parallel.
+   * Saves original + optimized data.
+4. Frontend displays a **side-by-side comparison**.
+5. All prior optimizations appear in `/history`.
+
+### Performance optimizations
+
+* Scraping + AI run in parallel threads.
+* HTML caching prevents re-fetching the full page repeatedly.
+* DB writes are async for fast API responses.
+* Skeleton loading elements produce instant UI feedback.
+
+---
+
+# 🗄 Database Layer
+
+### **Primary Mode — MySQL**
+
+If MySQL credentials in `.env` are valid:
+
+* Sequelize initializes automatically.
+* `optimizations` table is created on startup.
+* All historical data is stored relationally.
+
+### **Fallback Mode — JSON File**
+
+If MySQL is unavailable:
+
+* Backend uses `backend/src/db/db.json`.
+* Structure mirrors real DB models.
+* API responses remain identical.
+
+This ensures **zero setup required** for local development.
+
+---
+
+# 📦 Setup Instructions
+
+## 1️⃣ Backend Setup
+
+```sh
+cd backend
+npm install
+cp .env.example .env
+```
+
+Fill `.env`:
+
+```env
+PORT=3000
+GEMINI_API_KEY=your_key_here
+GEMINI_MODEL=gemini-2.5-flash
+
+# MySQL (optional — fallback JSON storage if invalid)
+DB_HOST=localhost
+DB_USER=root
+DB_PASS=password
+DB_NAME=listing_optimizer
+```
+
+Start the backend:
+
+```sh
+npm run dev
+```
+
+Backend runs at:
+
+```
+http://localhost:3000
 ```
 
 ---
 
-## Why This Project Matters
-This project demonstrates practical skills used in e-commerce automation: structured scraping, AI-based content generation, secure API design, data persistence, and clean UI workflows. It simulates a simplified version of internal tools used by Amazon sellers and retail optimization teams.
+## 2️⃣ Frontend Setup
+
+```sh
+cd frontend
+npm install
+npm run dev
+```
+
+Vite will start at:
+
+```
+http://localhost:5173
+```
 
 ---
 
-## Backend Setup
+# 🧪 API Summary
 
-1. Go to the backend folder
-	```sh
-	cd backend
-	```
-2. Install dependencies
-	```sh
-	npm install
-	```
-3. Create a .env file
-	```sh
-	cp .env.example .env
-	```
-4. Fill in required fields in `.env`:
-	```env
-	PORT=3000
-	GEMINI_API_KEY=your_key_here
-	GEMINI_MODEL=gemini-2.5-flash
-	DB_HOST=localhost
-	DB_USER=your_mysql_user
-	DB_PASS=your_mysql_pass
-	DB_NAME=listing_optimizer
-	```
-	If MySQL credentials are valid, the backend will create tables automatically.
-5. Start the backend
-	```sh
-	npm run dev
-	```
-	Backend will run at:
-	http://localhost:3000
-
----
-
-## Frontend Setup
-
-1. Go to the frontend folder
-	```sh
-	cd frontend
-	```
-2. Install dependencies
-	```sh
-	npm install
-	```
-3. Start the UI
-	```sh
-	npm run dev
-	```
-	Vite will show you a local development URL, usually:
-	http://localhost:5173
-
----
-
-
-## How to Use the App
-
-1. Open the frontend in the browser.
-2. Enter a valid Amazon ASIN.
-3. Click Optimize.
-4. The UI will show:
-	- Original title, bullets, description, and image.
-	- Optimized title, bullets, description, and keywords.
-5. Visit the History section to view all past optimizations.
-
-
----
-
-
-## API Summary
-
-**POST** `/api/optimize`
+### **POST** `/api/optimize`
 
 Input:
+
 ```json
 { "asin": "B0FWDBH2T2" }
 ```
-Returns scraped data + optimized data.
 
-**GET** `/api/history`
+Returns:
 
-Returns all stored optimizations.
-
-**GET** `/api/history/:asin`
-
-Returns optimization history for one ASIN.
-
-
+* scraped data
+* AI-optimized version
+* stored history record
 
 ---
 
-## Engineering Decisions
+### **GET** `/api/history`
 
- - Used localStorage so users don’t lose results on reload.
- - Scraper has fallback selectors for Amazon layout changes.
- - AI output schema is always the same for the frontend.
- - There’s a JSON fallback DB mode if MySQL isn’t available.
- - Broke out scraper, AI client, and DB helpers into separate modules.
- - Latency optimized: scraping and AI run in parallel, HTML is aggressively cached, DB writes are backgrounded, and the frontend uses animated skeleton loaders for instant feedback.
+Returns all optimizations.
 
 ---
 
-## Limitations
+### **GET** `/api/history/:asin`
 
-- Gemini’s output isn’t always consistent; prompt tweaks help but don’t fix everything.
+Returns optimization history for a single ASIN.
+
+---
+
+# 🎮 How to Use the App
+
+1. Open the frontend in a browser.
+2. Enter a valid ASIN.
+3. Click **Optimize**.
+4. View:
+
+   * Original scraped Amazon data
+   * AI-enhanced title, bullets, description, keywords
+   * Product image
+5. Navigate to **History** to browse all saved optimizations.
+
+---
+
+# 🧠 Engineering Decisions
+
+* **Structured scraper** with fallback selectors to survive Amazon DOM changes.
+* **Strict JSON schema** enforced in Gemini prompts for consistent output.
+* **LocalStorage caching** so user results persist on refresh.
+* **Unified DB interface** allowing transparent switching between MySQL and JSON.
+* **High performance** via:
+
+  * Parallel computation
+  * Cached requests
+  * Async DB writes
+  * Optimized React rendering
+
+---
+
+# ⚠️ Limitations
+
+* Amazon’s layout changes frequently—occasional selector updates required.
+* Gemini’s rewriting quality varies based on product type.
+* Amazon scraping must be used responsibly and may be restricted by Amazon’s terms.
+
+---
+
+# 🎯 Future Enhancements (Optional)
+
+* Multi-language optimization
+* Keyword analysis using Amazon autocomplete
+* Export optimized listings (CSV / JSON)
+* Bulk ASIN processing
+* Dark mode UI
 
 ---
