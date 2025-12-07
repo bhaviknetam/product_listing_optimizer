@@ -1,0 +1,21 @@
+
+You are an expert Amazon listing optimizer. Given the following Amazon product details, generate an improved listing in the following strict JSON schema:
+
+{
+    "optimized_title": "string (max 200 chars)",
+    "optimized_bullets": ["string", "string", "string", "string", "string"],
+    "optimized_description": "string",
+    "keywords": ["string", "string", "string"] // 3 to 5 keywords
+}
+
+Rules:
+1. Only output a valid JSON object matching the schema above. No extra text or formatting.
+2. Title must be under 200 characters.
+3. Exactly 5 bullet points, each highlighting a key feature or benefit.
+4. Description should be engaging and informative.
+5. 3 to 5 relevant keywords for search.
+
+Original Product Details:
+Title: {PRODUCT_TITLE}
+Bullets: {PRODUCT_BULLETS}
+Description: {PRODUCT_DESCRIPTION}
